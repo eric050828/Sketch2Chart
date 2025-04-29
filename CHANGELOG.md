@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2025-02-19] - Documentation Update
+
+### DOCS
+- Add English README
+- Added advanced settings configuration steps in usage guide
+- Reorganized usage steps for better clarity
+
 ## [2025-02-18] - SVG Interaction Enhancement
 
 ### FEAT

@@ -1,68 +1,71 @@
 # Sketch2Chart
 
-Sketch2Chart 是一個簡單易用的工具，能夠將手繪圖轉換成結構化的視覺代碼（Ex: SVG）。無論是流程圖、組織圖、示意圖或任何其他類型的圖表，Sketch2Chart 都能快速將您的手繪草圖轉換成可用的數位格式。
+[ English | [繁體中文](docs/README.zh-TW.md) ]
 
-## 主要功能
+Sketch2Chart is a user-friendly tool that converts hand-drawn sketches into structured visual code (e.g., SVG). Whether it's flowcharts, organizational charts, diagrams, or any other type of visualization, Sketch2Chart quickly transforms your hand-drawn sketches into usable digital formats.
 
-- 🖌️ **簡易畫布**：提供類似小畫家的繪圖界面
-- 📤 **圖片上傳**：支援上傳已有的手繪圖片
-- 🔄 **智能轉換**：利用AI技術將手繪內容轉換為SVG等結構化格式
-- 📝 **文字輔助**：可通過文字描述增強或修改輸出結果
-- ✏️ **代碼編輯**：直接編輯生成的代碼，內建語法高亮
-- 💾 **匯出功能**：下載生成的SVG或其他格式文件
+## Key Features
 
-## 使用方式
+- 🖌️ **Simple Canvas**: Paint-like drawing interface
+- 📤 **Image Upload**: Support for uploading existing hand-drawn images
+- 🔄 **Smart Conversion**: AI-powered transformation into SVG and other structured formats
+- 📝 **Text Assistance**: Enhance or modify output through text descriptions
+- ✏️ **Code Editing**: Direct code editing with syntax highlighting
+- 💾 **Export Options**: Download generated SVG or other format files
+- ⚙️ **Advanced Settings**: Customize API endpoint, model selection, and other parameters
 
-1. 下載原始碼
-2. 使用瀏覽器直接開啟 `public/index.html` 文件
-3. 選擇使用畫布繪圖或上傳已有圖片
-4. 點擊「轉換」按鈕進行處理
-5. 根據需要編輯生成的代碼或添加文字描述
-6. 下載或複製最終結果
+## Usage
 
-## 技術架構
+1. Download the source code
+2. Open `public/index.html` directly in your browser
+3. Choose to draw on canvas or upload an existing image
+4. Click "Convert" to process
+5. Edit generated code or add text descriptions as needed
+6. Download or copy the final result
 
-- 前端：HTML5, CSS3, JavaScript
-- 繪圖：Canvas API
-- 文件處理：FileReader API
-- 代碼編輯：CodeMirror 5.65.13
-- AI整合：通過API連接多模態大語言模型
+## Technical Stack
 
-## 開發環境需求
+- Frontend: HTML5, CSS3, JavaScript
+- Drawing: Canvas API
+- File Handling: FileReader API
+- Code Editing: CodeMirror 5.65.13
+- AI Integration: API connection to multimodal language models
 
-- 現代瀏覽器（Chrome, Firefox, Edge 等）
-- 網際網路連接（用於AI模型調用及CDN加載）
+## Development Requirements
 
-## 使用的外部套件
+- Modern browser (Chrome, Firefox, Edge, etc.)
+- Internet connection (for AI model calls and CDN loading)
 
-- [CodeMirror](https://codemirror.net/) - 用於代碼編輯與語法高亮
+## External Packages
 
-## 專案目錄結構
+- [CodeMirror](https://codemirror.net/) - For code editing and syntax highlighting
+
+## Project Structure
 
 ```
 /sketch2chart
-  ├── /docs               # 文件
-  ├── /public             # 公共資源和靜態文件
-  │    ├── index.html     # 主HTML文件
-  │    ├── /css           # CSS文件
+  ├── /docs               # Documentation
+  ├── /public             # Public resources and static files
+  │    ├── index.html     # Main HTML file
+  │    ├── /css           # CSS files
   │    │    └── styles.css
-  │    ├── /js            # JavaScript文件
-  │    │    ├── app.js    # 主應用邏輯
-  │    │    └── canvas.js # 畫布相關功能
-  │    └── /assets        # 圖片、圖標等靜態資源
+  │    ├── /js            # JavaScript files
+  │    │    ├── app.js    # Main application logic
+  │    │    └── canvas.js # Canvas-related functionality
+  │    └── /assets        # Images, icons, and other static assets
   │         └── /images   
-  ├── LICENSE             # 授權文件
-  └── README.md           # 專案說明文件
+  ├── LICENSE             # License file
+  └── README.md           # Project documentation
 ```
 
-## 未來規劃
+## Future Plans
 
-- 前後端分離架構
-- 提供獨立的API服務
-- Python部署選項
-- 支援更多輸出格式
-- 優化模型效能及轉換精準度
+- Frontend-backend separation
+- Standalone API service
+- Python deployment option
+- Support for more output formats
+- Model performance and conversion accuracy optimization
 
-## 授權條款
+## License
 
 MIT License 
