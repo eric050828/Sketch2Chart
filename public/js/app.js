@@ -15,6 +15,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearImageBtn = document.getElementById('clear-image');
     const dropZone = document.querySelector('.drop-zone');
     const apiKey = document.getElementById('api-key');
+    const textInput = document.getElementById('text-input');
+    
+    // 進階設定元素
+    const advancedSettingsBtn = document.getElementById('advanced-settings-btn');
+    const advancedSettingsModal = document.getElementById('advanced-settings-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    const resetDefaultsBtn = document.getElementById('reset-defaults-btn');
+    const apiUrl = document.getElementById('api-url');
+    const apiModel = document.getElementById('api-model');
+    const customModelContainer = document.getElementById('custom-model-container');
+    const customModel = document.getElementById('custom-model');
+    const temperature = document.getElementById('temperature');
+    const temperatureValue = document.getElementById('temperature-value');
+    const maxTokens = document.getElementById('max-tokens');
+    const streamResponse = document.getElementById('stream-response');
+    const saveSettings = document.getElementById('save-settings');
+    
+    // API設定默認值
+    const defaultApiSettings = {
+        apiUrl: 'https://api.openai.com/v1/chat/completions',
+        model: 'gpt-4-vision-preview',
+        customModel: '',
+        temperature: 0.7,
+        maxTokens: 4000,
+        streamResponse: true,
+        saveSettings: true
+    };
+    
+    // 當前API設定
+    let apiSettings = {...defaultApiSettings};
     
     // 初始化CodeMirror編輯器
     let codeEditor;
@@ -157,52 +188,274 @@ document.addEventListener('DOMContentLoaded', function() {
         dropZone.querySelector('.drop-zone-prompt').style.display = 'block';
     });
 
+    // 進階設定按鈕事件
+    advancedSettingsBtn.addEventListener('click', function() {
+        advancedSettingsModal.classList.remove('hidden');
+    });
+    
+    // 關閉模態視窗按鈕事件
+    closeModalBtn.addEventListener('click', function() {
+        advancedSettingsModal.classList.add('hidden');
+    });
+    
+    // 點擊模態視窗外部關閉
+    advancedSettingsModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.add('hidden');
+        }
+    });
+    
+    // 模型選擇變更事件
+    apiModel.addEventListener('change', function() {
+        if (this.value === 'custom') {
+            customModelContainer.classList.remove('hidden');
+        } else {
+            customModelContainer.classList.add('hidden');
+        }
+    });
+    
+    // 溫度滑桿變更事件
+    temperature.addEventListener('input', function() {
+        temperatureValue.textContent = this.value;
+    });
+    
+    // 保存設定按鈕事件
+    saveSettingsBtn.addEventListener('click', function() {
+        // 更新設定
+        apiSettings.apiUrl = apiUrl.value;
+        apiSettings.model = apiModel.value === 'custom' ? customModel.value : apiModel.value;
+        apiSettings.customModel = customModel.value;
+        apiSettings.temperature = parseFloat(temperature.value);
+        apiSettings.maxTokens = parseInt(maxTokens.value);
+        apiSettings.streamResponse = streamResponse.checked;
+        apiSettings.saveSettings = saveSettings.checked;
+        
+        // 保存設定到本地存儲
+        if (saveSettings.checked) {
+            localStorage.setItem('sketch2chart_api_settings', JSON.stringify(apiSettings));
+        }
+        
+        // 關閉模態視窗
+        advancedSettingsModal.classList.add('hidden');
+        
+        // 顯示提示
+        showToast('設定已保存');
+    });
+    
+    // 重設為預設值按鈕事件
+    resetDefaultsBtn.addEventListener('click', function() {
+        // 重設為預設值
+        apiSettings = {...defaultApiSettings};
+        
+        // 更新UI
+        updateSettingsUI();
+        
+        // 顯示提示
+        showToast('已重設為預設值');
+    });
+    
     // 轉換按鈕點擊事件
     convertBtn.addEventListener('click', function() {
+        // 檢查API金鑰
+        if (!apiKey.value.trim()) {
+            alert('請輸入API金鑰！');
+            return;
+        }
+        
         // 顯示加載狀態
         this.disabled = true;
         this.innerHTML = '處理中...';
         svgPreview.innerHTML = '<div class="placeholder">正在處理您的圖片，請稍候...</div>';
         
-        // 模擬API調用延遲
-        setTimeout(() => {
-            processConversion();
-        }, 1500);
+        // 調用API
+        callApi();
     });
 
-    // 模擬轉換處理
-    function processConversion() {
-        // 檢查API金鑰
-        if (!apiKey.value.trim()) {
-            alert('請輸入API金鑰！');
-            convertBtn.disabled = false;
-            convertBtn.innerHTML = '轉換為SVG';
-            svgPreview.innerHTML = '<div class="placeholder">轉換結果將在此顯示</div>';
-            return;
+    // 調用API
+    async function callApi() {
+        try {
+            // 準備畫布或圖片數據
+            let imageData = null;
+            
+            // 如果上傳了圖片
+            if (imagePreview.src && !imagePreview.src.endsWith('alt="預覽圖片"')) {
+                imageData = imagePreview.src;
+            } else {
+                // 否則使用畫布
+                const canvas = document.getElementById('drawing-canvas');
+                imageData = canvas.toDataURL('image/png');
+            }
+            
+            // 準備請求數據
+            const requestData = prepareRequestData(imageData);
+            
+            // 發送API請求
+            const response = await sendApiRequest(requestData);
+            
+            // 處理回應
+            processSvgResponse(response);
+        } catch (error) {
+            // 處理錯誤
+            handleApiError(error);
+        }
+    }
+    
+    // 準備API請求數據
+    function prepareRequestData(imageData) {
+        // 獲取當前設定的模型
+        const model = apiSettings.model;
+        
+        // 創建消息內容
+        const messages = [
+            {
+                role: "system",
+                content: "You are a skilled assistant that converts hand-drawn sketches into SVG code. Your task is to analyze the provided image and generate clean, optimized SVG code that accurately represents the sketch. Focus on precision and maintain the original layout and proportions."
+            },
+            {
+                role: "user",
+                content: [
+                    {
+                        type: "text",
+                        text: textInput.value || "Please convert this hand-drawn sketch into SVG code."
+                    },
+                    {
+                        type: "image_url",
+                        image_url: {
+                            url: imageData
+                        }
+                    }
+                ]
+            }
+        ];
+        
+        // 返回請求數據對象
+        return {
+            model: model,
+            messages: messages,
+            max_tokens: apiSettings.maxTokens,
+            temperature: apiSettings.temperature,
+            stream: apiSettings.streamResponse
+        };
+    }
+    
+    // 發送API請求
+    async function sendApiRequest(requestData) {
+        // 發送請求
+        const response = await fetch(apiSettings.apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey.value}`
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        // 檢查回應狀態
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API請求失敗：${response.status} ${errorText}`);
         }
         
-        // 這裡應該是實際的API調用，現在只是模擬
-        const sampleSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">
-            <rect x="50" y="50" width="300" height="100" fill="none" stroke="#4f46e5" stroke-width="2"/>
-            <line x1="50" y1="50" x2="350" y2="150" stroke="#4f46e5" stroke-width="2"/>
-            <circle cx="200" cy="100" r="30" fill="none" stroke="#4f46e5" stroke-width="2"/>
-            <text x="185" y="105" font-family="Arial" font-size="12" fill="#1f2937">文字</text>
-        </svg>`;
+        // 返回回應數據
+        if (apiSettings.streamResponse) {
+            return response; // 返回響應對象以進行流處理
+        } else {
+            return await response.json();
+        }
+    }
+    
+    // 處理SVG回應
+    async function processSvgResponse(response) {
+        try {
+            let svgCode = '';
+            
+            if (apiSettings.streamResponse) {
+                // 處理串流回應
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    // 解碼數據
+                    const chunk = decoder.decode(value, { stream: true });
+                    buffer += chunk;
+                    
+                    // 解析回應
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // 保留最後一行作為下一個緩衝
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.substring(6);
+                            if (data === '[DONE]') continue;
+                            
+                            try {
+                                const json = JSON.parse(data);
+                                const content = json.choices[0].delta.content;
+                                if (content) svgCode += content;
+                            } catch (e) {
+                                console.warn('解析串流數據時出錯:', e);
+                            }
+                        }
+                    }
+                }
+            } else {
+                // 處理非串流回應
+                const content = response.choices[0].message.content;
+                // 提取SVG代碼 (假設回應中包含純SVG代碼)
+                svgCode = extractSvgCode(content);
+            }
+            
+            // 更新預覽和代碼編輯器
+            if (svgCode) {
+                // 更新預覽
+                svgPreview.innerHTML = svgCode;
+                
+                // 使用CodeMirror編輯器設定內容
+                codeEditor.setValue(svgCode);
+                codeEditor.refresh();
+                
+                // 啟用按鈕
+                copyCodeBtn.disabled = false;
+                downloadSvgBtn.disabled = false;
+            } else {
+                throw new Error('未能從API回應中提取SVG代碼');
+            }
+        } catch (error) {
+            handleApiError(error);
+        } finally {
+            // 恢復按鈕狀態
+            convertBtn.disabled = false;
+            convertBtn.innerHTML = '轉換為SVG';
+        }
+    }
+    
+    // 從回應文本中提取SVG代碼
+    function extractSvgCode(text) {
+        // 假設回應只包含乾淨的SVG代碼
+        // 如果回應包含其他文本，可以使用正則表達式提取<svg>...</svg>部分
+        if (text.trim().startsWith('<svg') && text.trim().endsWith('</svg>')) {
+            return text.trim();
+        }
         
-        // 更新預覽和代碼編輯器
-        svgPreview.innerHTML = sampleSvg;
+        // 嘗試從文本中提取SVG代碼
+        const svgMatch = text.match(/<svg[\s\S]*?<\/svg>/i);
+        return svgMatch ? svgMatch[0] : text.trim();
+    }
+    
+    // 處理API錯誤
+    function handleApiError(error) {
+        console.error('API錯誤:', error);
         
-        // 使用CodeMirror編輯器設定內容
-        codeEditor.setValue(sampleSvg);
-        codeEditor.refresh();
-        
-        // 啟用按鈕
-        copyCodeBtn.disabled = false;
-        downloadSvgBtn.disabled = false;
+        // 更新UI
+        svgPreview.innerHTML = `<div class="placeholder error">發生錯誤：${error.message}</div>`;
         convertBtn.disabled = false;
         convertBtn.innerHTML = '轉換為SVG';
     }
-
+    
     // 複製代碼按鈕
     copyCodeBtn.addEventListener('click', function() {
         if (codeEditor.getValue()) {
@@ -263,4 +516,91 @@ document.addEventListener('DOMContentLoaded', function() {
     apiKey.addEventListener('change', function() {
         localStorage.setItem('sketch2chart_api_key', this.value);
     });
+    
+    // 載入保存的設定
+    function loadSavedSettings() {
+        const savedSettings = localStorage.getItem('sketch2chart_api_settings');
+        
+        if (savedSettings) {
+            try {
+                // 解析保存的設定
+                const parsed = JSON.parse(savedSettings);
+                
+                // 更新當前設定
+                apiSettings = { ...apiSettings, ...parsed };
+                
+                // 更新UI
+                updateSettingsUI();
+            } catch (error) {
+                console.error('載入設定失敗:', error);
+            }
+        } else {
+            // 使用默認設定
+            apiSettings = { ...defaultApiSettings };
+            updateSettingsUI();
+        }
+    }
+    
+    // 更新設定UI
+    function updateSettingsUI() {
+        // 更新URL
+        apiUrl.value = apiSettings.apiUrl;
+        
+        // 更新模型選擇
+        if (apiSettings.model === apiSettings.customModel) {
+            apiModel.value = 'custom';
+            customModel.value = apiSettings.customModel;
+            customModelContainer.classList.remove('hidden');
+        } else {
+            apiModel.value = apiSettings.model;
+            customModel.value = apiSettings.customModel;
+            customModelContainer.classList.add('hidden');
+        }
+        
+        // 更新溫度
+        temperature.value = apiSettings.temperature;
+        temperatureValue.textContent = apiSettings.temperature;
+        
+        // 更新最大令牌數
+        maxTokens.value = apiSettings.maxTokens;
+        
+        // 更新選項
+        streamResponse.checked = apiSettings.streamResponse;
+        saveSettings.checked = apiSettings.saveSettings;
+    }
+    
+    // 顯示提示信息
+    function showToast(message) {
+        // 如果已有提示，先移除
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            document.body.removeChild(existingToast);
+        }
+        
+        // 創建提示元素
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        
+        // 添加到頁面
+        document.body.appendChild(toast);
+        
+        // 顯示動畫
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+        
+        // 自動隱藏
+        setTimeout(() => {
+            toast.classList.remove('show');
+            
+            // 隱藏後移除
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 300);
+        }, 3000);
+    }
+    
+    // 初始化載入設定
+    loadSavedSettings();
 }); 

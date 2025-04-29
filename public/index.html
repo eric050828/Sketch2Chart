@@ -80,9 +80,12 @@
                     <textarea id="text-input" placeholder="請輸入額外的文字描述或修改指示..."></textarea>
                 </div>
 
-                <div class="api-key-container">
-                    <label for="api-key">API金鑰</label>
-                    <input type="password" id="api-key" placeholder="請輸入您的API金鑰">
+                <div class="api-container">
+                    <div class="api-key-container">
+                        <label for="api-key">API金鑰</label>
+                        <input type="password" id="api-key" placeholder="請輸入您的API金鑰">
+                    </div>
+                    <button id="advanced-settings-btn" class="action-btn">⚙️ 進階設定</button>
                 </div>
 
                 <div class="actions">
@@ -117,6 +120,73 @@
             </section>
         </div>
     </main>
+
+    <!-- 進階設定模態視窗 -->
+    <div id="advanced-settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>進階 API 設定</h2>
+                <button id="close-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-url">API 端點 URL</label>
+                    <input type="text" id="api-url" placeholder="例如: https://api.openai.com/v1/chat/completions">
+                    <small>輸入 OpenAI 相容的 API 端點。自架 LLM 或其他兼容服務可在此設定。</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="api-model">模型選擇</label>
+                    <select id="api-model">
+                        <option value="gpt-4-vision-preview">GPT-4 Vision</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-4">GPT-4</option>
+                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                        <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                        <option value="llama-3-70b-vision">Llama 3 70B Vision</option>
+                        <option value="custom">自定義...</option>
+                    </select>
+                </div>
+                
+                <div id="custom-model-container" class="form-group hidden">
+                    <label for="custom-model">自定義模型名稱</label>
+                    <input type="text" id="custom-model" placeholder="輸入自定義模型名稱">
+                </div>
+                
+                <div class="form-group">
+                    <label for="temperature">溫度 (Temperature)</label>
+                    <div class="range-container">
+                        <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
+                        <span id="temperature-value">0.7</span>
+                    </div>
+                    <small>較低的值產生更確定性結果，較高的值產生更多樣化結果</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="max-tokens">最大生成令牌數</label>
+                    <input type="number" id="max-tokens" min="1" max="16000" value="4000">
+                    <small>限制API回應的最大長度</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>進階選項</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="stream-response" checked>
+                        <label for="stream-response">啟用串流回應（如果 API 支援）</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="save-settings" checked>
+                        <label for="save-settings">保存這些設定</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="reset-defaults-btn" class="action-btn">重設為預設值</button>
+                <button id="save-settings-btn" class="primary-btn">保存設定</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <p>Sketch2Chart &copy; 2025 | <a href="https://github.com/eric050828/sketch2chart" target="_blank">GitHub</a></p>
