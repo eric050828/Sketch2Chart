@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2025-02-18] - SVG Interaction Enhancement
+
+### FEAT
+- Added SVG preview area zoom and pan functionality
+- Integrated SVG.js and PanZoom library for interactive operations
+- Added zoom control buttons (zoom in, zoom out, reset)
+- Implemented real-time preview update functionality when editing SVG code
+
+### STYLE
+- Refactored output area layout to vertical alignment
+- Hidden preview area scrollbar for improved visual experience
+- Added circular control buttons and hover effect
+- Optimized error message display
+
 ## [2025-02-15] - API Enhancement
 
 ### FEAT

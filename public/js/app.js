@@ -33,6 +33,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const streamResponse = document.getElementById('stream-response');
     const saveSettings = document.getElementById('save-settings');
     
+    // 縮放控制按鈕
+    const zoomInBtn = document.getElementById('zoom-in');
+    const zoomOutBtn = document.getElementById('zoom-out');
+    const zoomResetBtn = document.getElementById('zoom-reset');
+    
+    // SVG.js 相關變數
+    let svgDrawing = null;
+    let svgContainer = null;
+    const ZOOM_STEP = 0.2; // 每次縮放的步進值
+    
     // API設定默認值
     const defaultApiSettings = {
         apiUrl: 'https://api.openai.com/v1/chat/completions',
@@ -76,17 +86,92 @@ document.addEventListener('DOMContentLoaded', function() {
             codeEditor.refresh();
         });
         
-        // 當切換到程式碼頁籤時刷新編輯器
-        document.querySelector('.result-tab-btn[data-target="code-section"]').addEventListener('click', function() {
-            setTimeout(() => {
-                codeEditor.refresh();
-            }, 10);
+        // 添加編輯器內容變更事件監聽，即時更新預覽
+        codeEditor.on('change', function() {
+            const svgCode = codeEditor.getValue();
+            if (svgCode && svgCode.trim().startsWith('<svg')) {
+                updateSvgPreview(svgCode);
+            }
         });
     }
     
+    // 更新SVG預覽
+    function updateSvgPreview(svgCode) {
+        // 清除現有內容
+        svgPreview.innerHTML = '';
+        
+        // 創建SVG容器
+        svgContainer = document.createElement('div');
+        svgContainer.id = 'svg-container';
+        svgContainer.style.width = '100%';
+        svgContainer.style.height = '100%';
+        svgPreview.appendChild(svgContainer);
+        
+        try {
+            // 初始化SVG.js繪圖
+            svgDrawing = SVG().addTo('#svg-container').size('100%', '100%');
+            
+            // 解析SVG代碼
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgCode, 'image/svg+xml');
+            const svgElement = svgDoc.documentElement;
+            
+            // 獲取SVG的viewBox屬性
+            let viewBox = svgElement.getAttribute('viewBox');
+            if (!viewBox) {
+                const width = svgElement.getAttribute('width') || 800;
+                const height = svgElement.getAttribute('height') || 600;
+                viewBox = `0 0 ${width} ${height}`;
+            }
+            
+            // 設置SVG.js繪圖的viewBox
+            svgDrawing.attr('viewBox', viewBox);
+            
+            // 將SVG代碼添加到SVG.js繪圖中
+            svgDrawing.svg(svgCode);
+            
+            // 啟用平移和縮放功能
+            svgDrawing.panZoom({
+                zoomMin: 0.5,
+                zoomMax: 10,
+                zoomFactor: 0.1
+            });
+            
+            // 啟用按鈕
+            zoomInBtn.disabled = false;
+            zoomOutBtn.disabled = false;
+            zoomResetBtn.disabled = false;
+        } catch (error) {
+            console.error('SVG渲染錯誤:', error);
+            svgPreview.innerHTML = `<div class="placeholder error">SVG渲染錯誤: ${error.message}</div>`;
+        }
+    }
+    
+    // 縮放控制按鈕事件
+    zoomInBtn.addEventListener('click', function() {
+        if (svgDrawing) {
+            const zoom = svgDrawing.zoom();
+            svgDrawing.zoom(zoom + ZOOM_STEP);
+        }
+    });
+    
+    zoomOutBtn.addEventListener('click', function() {
+        if (svgDrawing) {
+            const zoom = svgDrawing.zoom();
+            svgDrawing.zoom(Math.max(0.1, zoom - ZOOM_STEP));
+        }
+    });
+    
+    zoomResetBtn.addEventListener('click', function() {
+        if (svgDrawing) {
+            svgDrawing.zoom(1);
+            svgDrawing.panTo(0, 0);
+        }
+    });
+    
     // 初始化編輯器
     initCodeMirror();
-
+    
     // 標籤切換功能
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -98,26 +183,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 更新內容區域
             tabContents.forEach(content => {
-                if (content.id === target) {
-                    content.classList.remove('hidden');
-                } else {
-                    content.classList.add('hidden');
-                }
-            });
-        });
-    });
-
-    // 結果標籤切換功能
-    resultTabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const target = btn.dataset.target;
-            
-            // 更新按鈕狀態
-            resultTabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // 更新內容區域
-            resultContents.forEach(content => {
                 if (content.id === target) {
                     content.classList.remove('hidden');
                 } else {
@@ -412,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 更新預覽和代碼編輯器
             if (svgCode) {
                 // 更新預覽
-                svgPreview.innerHTML = svgCode;
+                updateSvgPreview(svgCode);
                 
                 // 使用CodeMirror編輯器設定內容
                 codeEditor.setValue(svgCode);

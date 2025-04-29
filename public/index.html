@@ -30,6 +30,10 @@
     <!-- 代碼自動完成 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/xml-hint.min.js"></script>
+    
+    <!-- SVG.js 庫 - 用於SVG縮放與平移 -->
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.2.0/dist/svg.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.panzoom.js@2.1.2/dist/svg.panzoom.min.js"></script>
 </head>
 <body>
     <header>
@@ -95,18 +99,26 @@
 
             <!-- 右側輸出區域 -->
             <section class="output-section">
-                <div class="result-tabs">
-                    <button class="result-tab-btn active" data-target="preview-section">預覽</button>
-                    <button class="result-tab-btn" data-target="code-section">程式碼</button>
-                </div>
+                <h3 class="section-title">轉換結果</h3>
 
-                <div class="result-content" id="preview-section">
+                <!-- 預覽區域 -->
+                <div class="preview-container">
+                    <h4>預覽</h4>
                     <div id="svg-preview">
                         <div class="placeholder">轉換結果將在此顯示</div>
+                        <!-- SVG.js 容器將在此創建 -->
+                    </div>
+                    <!-- 縮放控制按鈕 -->
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" id="zoom-in">+</button>
+                        <button class="zoom-btn" id="zoom-out">-</button>
+                        <button class="zoom-btn" id="zoom-reset">⟲</button>
                     </div>
                 </div>
 
-                <div class="result-content hidden" id="code-section">
+                <!-- 代碼編輯區域 -->
+                <div class="code-container">
+                    <h4>SVG 程式碼</h4>
                     <div class="code-editor-wrapper">
                         <!-- CodeMirror 編輯器將替換此元素 -->
                         <textarea id="code-editor" spellcheck="false"></textarea>
