@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sketch2Chart - 手繪轉換工具</title>
+    <!-- 基本樣式 -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- CodeMirror 編輯器核心 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <!-- CodeMirror 主題 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <!-- CodeMirror 代碼折疊 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.css">
+    
+    <!-- CodeMirror 核心腳本 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <!-- XML模式用於SVG編輯 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <!-- 代碼折疊插件 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/xml-fold.min.js"></script>
+    <!-- 搜尋功能 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/searchcursor.min.js"></script>
+    <!-- 括號匹配 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+    <!-- 代碼自動完成 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/hint/xml-hint.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Sketch2Chart</h1>
+        <p>將手繪圖轉換為結構化代碼</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- 左側輸入區域 -->
+            <section class="input-section">
+                <div class="tabs">
+                    <button class="tab-btn active" data-target="canvas-container">畫布</button>
+                    <button class="tab-btn" data-target="upload-container">上傳圖片</button>
+                </div>
+
+                <div class="tab-content" id="canvas-container">
+                    <div class="canvas-tools">
+                        <button id="pen-tool" class="tool-btn active">✏️ 鉛筆</button>
+                        <button id="line-tool" class="tool-btn">📏 直線</button>
+                        <button id="rect-tool" class="tool-btn">⬜ 矩形</button>
+                        <button id="circle-tool" class="tool-btn">⭕ 圓形</button>
+                        <button id="text-tool" class="tool-btn">🔤 文字</button>
+                        <button id="eraser-tool" class="tool-btn">🧽 橡皮擦</button>
+                        <button id="clear-canvas" class="action-btn">🗑️ 清除</button>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="drawing-canvas"></canvas>
+                    </div>
+                </div>
+
+                <div class="tab-content hidden" id="upload-container">
+                    <div class="upload-area">
+                        <div class="drop-zone">
+                            <span class="drop-zone-prompt">拖放圖片到此處或點擊上傳</span>
+                            <input type="file" id="image-upload" class="drop-zone-input" accept="image/*">
+                        </div>
+                        <div id="preview-container" class="hidden">
+                            <h3>預覽圖片</h3>
+                            <img id="image-preview" src="" alt="預覽圖片">
+                            <button id="clear-image" class="action-btn">移除圖片</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-description">
+                    <h3>文字描述（可選）</h3>
+                    <textarea id="text-input" placeholder="請輸入額外的文字描述或修改指示..."></textarea>
+                </div>
+
+                <div class="api-key-container">
+                    <label for="api-key">API金鑰</label>
+                    <input type="password" id="api-key" placeholder="請輸入您的API金鑰">
+                </div>
+
+                <div class="actions">
+                    <button id="convert-btn" class="primary-btn">轉換為SVG</button>
+                </div>
+            </section>
+
+            <!-- 右側輸出區域 -->
+            <section class="output-section">
+                <div class="result-tabs">
+                    <button class="result-tab-btn active" data-target="preview-section">預覽</button>
+                    <button class="result-tab-btn" data-target="code-section">程式碼</button>
+                </div>
+
+                <div class="result-content" id="preview-section">
+                    <div id="svg-preview">
+                        <div class="placeholder">轉換結果將在此顯示</div>
+                    </div>
+                </div>
+
+                <div class="result-content hidden" id="code-section">
+                    <div class="code-editor-wrapper">
+                        <!-- CodeMirror 編輯器將替換此元素 -->
+                        <textarea id="code-editor" spellcheck="false"></textarea>
+                    </div>
+                </div>
+
+                <div class="output-actions">
+                    <button id="copy-code-btn" class="action-btn" disabled>複製代碼</button>
+                    <button id="download-svg-btn" class="primary-btn" disabled>下載SVG</button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>Sketch2Chart &copy; 2025 | <a href="https://github.com/eric050828/sketch2chart" target="_blank">GitHub</a></p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script src="js/canvas.js"></script>
+</body>
+</html> 
