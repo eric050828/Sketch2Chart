@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropZone = document.querySelector('.drop-zone');
     const apiKey = document.getElementById('api-key');
     const textInput = document.getElementById('text-input');
+    const historyPreviewsContainer = document.getElementById('history-previews');
     
     // 進階設定元素
     const advancedSettingsBtn = document.getElementById('advanced-settings-btn');
@@ -60,6 +61,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化CodeMirror編輯器
     let codeEditor;
     
+    // 歷史記錄相關變數
+    const MAX_HISTORY_ITEMS = 20;
+    let historyItems = [];
+    
     function initCodeMirror() {
         codeEditor = CodeMirror.fromTextArea(codeEditorTextarea, {
             mode: "xml",
@@ -87,16 +92,21 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // 添加編輯器內容變更事件監聽，即時更新預覽
+        let updateTimer = null;
         codeEditor.on('change', function() {
-            const svgCode = codeEditor.getValue();
-            if (svgCode && svgCode.trim().startsWith('<svg')) {
-                updateSvgPreview(svgCode);
-            }
+            clearTimeout(updateTimer);
+            updateTimer = setTimeout(function() {
+                const svgCode = codeEditor.getValue();
+                if (svgCode && svgCode.trim().startsWith('<svg')) {
+                    // 當用戶手動編輯代碼時，我們不希望保存到歷史記錄
+                    updateSvgPreview(svgCode, true);
+                }
+            }, 300);  // 300ms 的防抖動延遲
         });
     }
     
     // 更新SVG預覽
-    function updateSvgPreview(svgCode) {
+    async function updateSvgPreview(svgCode, fromHistory = false) {
         // 清除現有內容
         svgPreview.innerHTML = '';
         
@@ -141,6 +151,13 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomInBtn.disabled = false;
             zoomOutBtn.disabled = false;
             zoomResetBtn.disabled = false;
+            copyCodeBtn.disabled = false;
+            downloadSvgBtn.disabled = false;
+            
+            // 如果不是從歷史記錄載入的圖像，保存到歷史
+            if (!fromHistory && svgCode) {
+                await saveToHistory(svgCode);
+            }
         } catch (error) {
             console.error('SVG渲染錯誤:', error);
             svgPreview.innerHTML = `<div class="placeholder error">SVG渲染錯誤: ${error.message}</div>`;
@@ -168,9 +185,6 @@ document.addEventListener('DOMContentLoaded', function() {
             svgDrawing.panTo(0, 0);
         }
     });
-    
-    // 初始化編輯器
-    initCodeMirror();
     
     // 標籤切換功能
     tabBtns.forEach(btn => {
@@ -253,88 +267,34 @@ document.addEventListener('DOMContentLoaded', function() {
         dropZone.querySelector('.drop-zone-prompt').style.display = 'block';
     });
 
-    // 進階設定按鈕事件
-    advancedSettingsBtn.addEventListener('click', function() {
-        advancedSettingsModal.classList.remove('hidden');
-    });
-    
-    // 關閉模態視窗按鈕事件
-    closeModalBtn.addEventListener('click', function() {
-        advancedSettingsModal.classList.add('hidden');
-    });
-    
-    // 點擊模態視窗外部關閉
-    advancedSettingsModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.add('hidden');
-        }
-    });
-    
-    // 模型選擇變更事件
-    apiModel.addEventListener('change', function() {
-        if (this.value === 'custom') {
-            customModelContainer.classList.remove('hidden');
-        } else {
-            customModelContainer.classList.add('hidden');
-        }
-    });
-    
-    // 溫度滑桿變更事件
-    temperature.addEventListener('input', function() {
-        temperatureValue.textContent = this.value;
-    });
-    
-    // 保存設定按鈕事件
-    saveSettingsBtn.addEventListener('click', function() {
-        // 更新設定
-        apiSettings.apiUrl = apiUrl.value;
-        apiSettings.model = apiModel.value === 'custom' ? customModel.value : apiModel.value;
-        apiSettings.customModel = customModel.value;
-        apiSettings.temperature = parseFloat(temperature.value);
-        apiSettings.maxTokens = parseInt(maxTokens.value);
-        apiSettings.streamResponse = streamResponse.checked;
-        apiSettings.saveSettings = saveSettings.checked;
+    // 轉換按鈕點擊事件 - 這個事件處理程序將在初始化函數中設置
+    let isProcessing = false; // 防止重複點擊
+    function handleConvertButtonClick() {
+        // 如果已經在處理中，則忽略
+        if (isProcessing) return;
         
-        // 保存設定到本地存儲
-        if (saveSettings.checked) {
-            localStorage.setItem('sketch2chart_api_settings', JSON.stringify(apiSettings));
-        }
-        
-        // 關閉模態視窗
-        advancedSettingsModal.classList.add('hidden');
-        
-        // 顯示提示
-        showToast('設定已保存');
-    });
-    
-    // 重設為預設值按鈕事件
-    resetDefaultsBtn.addEventListener('click', function() {
-        // 重設為預設值
-        apiSettings = {...defaultApiSettings};
-        
-        // 更新UI
-        updateSettingsUI();
-        
-        // 顯示提示
-        showToast('已重設為預設值');
-    });
-    
-    // 轉換按鈕點擊事件
-    convertBtn.addEventListener('click', function() {
         // 檢查API金鑰
         if (!apiKey.value.trim()) {
             alert('請輸入API金鑰！');
             return;
         }
         
+        // 標記正在處理
+        isProcessing = true;
+        
         // 顯示加載狀態
-        this.disabled = true;
-        this.innerHTML = '處理中...';
+        convertBtn.disabled = true;
+        convertBtn.innerHTML = '處理中...';
         svgPreview.innerHTML = '<div class="placeholder">正在處理您的圖片，請稍候...</div>';
         
         // 調用API
-        callApi();
-    });
+        callApi().finally(() => {
+            // 恢復按鈕狀態
+            convertBtn.disabled = false;
+            convertBtn.innerHTML = '轉換為SVG';
+            isProcessing = false;
+        });
+    }
 
     // 調用API
     async function callApi() {
@@ -358,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await sendApiRequest(requestData);
             
             // 處理回應
-            processSvgResponse(response);
+            await processSvgResponse(response);
         } catch (error) {
             // 處理錯誤
             handleApiError(error);
@@ -381,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 content: [
                     {
                         type: "text",
-                        text: textInput.value || "Please convert this hand-drawn sketch into SVG code."
+                        text: (textInput.value ? `${textInput.value}\n` : "") + "Please convert this hand-drawn sketch into SVG code."
                     },
                     {
                         type: "image_url",
@@ -476,12 +436,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 更新預覽和代碼編輯器
             if (svgCode) {
-                // 更新預覽
-                updateSvgPreview(svgCode);
-                
-                // 使用CodeMirror編輯器設定內容
+                // 設置編輯器內容
                 codeEditor.setValue(svgCode);
                 codeEditor.refresh();
+                
+                // 更新SVG預覽 - 不在此處保存歷史記錄，將在updateSvgPreview中處理
+                await updateSvgPreview(svgCode, false);
                 
                 // 啟用按鈕
                 copyCodeBtn.disabled = false;
@@ -491,10 +451,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             handleApiError(error);
-        } finally {
-            // 恢復按鈕狀態
-            convertBtn.disabled = false;
-            convertBtn.innerHTML = '轉換為SVG';
         }
     }
     
@@ -666,6 +622,372 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
     
-    // 初始化載入設定
-    loadSavedSettings();
+    // 歷史記錄功能
+    async function saveToHistory(svgCode) {
+        if (!svgCode || svgCode.trim() === '') return;
+        
+        // 簡單雜湊函數
+        const simpleHash = (str) => {
+            return str.split('').reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) | 0, 0);
+        };
+        
+        // 檢查是否已經存在相同的SVG
+        if (historyItems.length > 0) {
+            const newHash = simpleHash(svgCode);
+            
+            // 檢查最新項目是否相同 (避免短時間內重複添加相同的SVG)
+            if (historyItems[0]._hash === newHash) {
+                return; // 不添加重複項目
+            }
+        }
+        
+        // 創建一個歷史項目
+        const timestamp = new Date();
+        try {
+            const dataUrl = await generateSvgThumbnail(svgCode);
+            const historyItem = {
+                id: `history-${Date.now()}`,
+                timestamp: timestamp,
+                svgCode: svgCode,
+                thumbnail: dataUrl,
+                description: textInput.value || "",
+                _hash: simpleHash(svgCode)
+            };
+            
+            // 添加到歷史數組
+            historyItems.unshift(historyItem);
+            
+            // 限制歷史項目數量
+            if (historyItems.length > MAX_HISTORY_ITEMS) {
+                historyItems = historyItems.slice(0, MAX_HISTORY_ITEMS);
+            }
+            
+            // 保存到localStorage
+            saveHistoryToStorage();
+            
+            // 更新UI
+            renderHistoryItems();
+        } catch (error) {
+            console.error('保存歷史記錄失敗:', error);
+        }
+    }
+    
+    function generateSvgThumbnail(svgCode) {
+        // 創建一個暫時的SVG容器來生成縮圖
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.width = '800px';
+        tempContainer.style.height = '600px';
+        document.body.appendChild(tempContainer);
+        
+        // 設置SVG內容
+        tempContainer.innerHTML = svgCode;
+        const svgElement = tempContainer.querySelector('svg');
+        
+        // 用canvas生成縮圖
+        try {
+            const svgString = new XMLSerializer().serializeToString(svgElement);
+            const canvas = document.createElement('canvas');
+            canvas.width = 240; // 縮圖寬度
+            canvas.height = 160; // 縮圖高度
+            
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const img = new Image();
+            img.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+            
+            return new Promise((resolve) => {
+                img.onload = function() {
+                    // 計算縮放比例以適應縮圖尺寸
+                    const scale = Math.min(canvas.width / img.width, canvas.height / img.height) * 0.9;
+                    const x = (canvas.width - img.width * scale) / 2;
+                    const y = (canvas.height - img.height * scale) / 2;
+                    
+                    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                    document.body.removeChild(tempContainer);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                
+                img.onerror = function() {
+                    // 錯誤處理 - 返回一個空白縮圖
+                    document.body.removeChild(tempContainer);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+            });
+        } catch (error) {
+            console.error('生成縮圖錯誤:', error);
+            document.body.removeChild(tempContainer);
+            
+            // 創建一個簡單的預設縮圖
+            const canvas = document.createElement('canvas');
+            canvas.width = 240;
+            canvas.height = 160;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#999';
+            ctx.textAlign = 'center';
+            ctx.fillText('預覽不可用', canvas.width / 2, canvas.height / 2);
+            
+            return canvas.toDataURL('image/png');
+        }
+    }
+    
+    function renderHistoryItems() {
+        // 清空容器
+        historyPreviewsContainer.innerHTML = '';
+        
+        if (historyItems.length === 0) {
+            historyPreviewsContainer.innerHTML = '<div class="placeholder">尚無歷史記錄</div>';
+            return;
+        }
+        
+        // 渲染每個歷史項目
+        historyItems.forEach(item => {
+            const historyElement = document.createElement('div');
+            historyElement.className = 'history-item';
+            historyElement.dataset.id = item.id;
+            
+            // 添加縮圖
+            const img = document.createElement('img');
+            img.src = item.thumbnail;
+            img.alt = '轉換結果預覽';
+            historyElement.appendChild(img);
+            
+            // 添加日期標籤
+            const dateLabel = document.createElement('div');
+            dateLabel.className = 'history-date';
+            dateLabel.textContent = formatDate(item.timestamp);
+            historyElement.appendChild(dateLabel);
+            
+            // 添加刪除按鈕
+            const deleteBtn = document.createElement('div');
+            deleteBtn.className = 'delete-history';
+            deleteBtn.textContent = '×';
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteHistoryItem(item.id);
+            });
+            historyElement.appendChild(deleteBtn);
+            
+            // 點擊載入該歷史項目
+            historyElement.addEventListener('click', () => {
+                loadHistoryItem(item);
+            });
+            
+            historyPreviewsContainer.appendChild(historyElement);
+        });
+    }
+    
+    function loadHistoryItem(item) {
+        // 設置編輯器內容
+        codeEditor.setValue(item.svgCode);
+        
+        // 設置描述（如果有）
+        textInput.value = item.description;
+        
+        // 更新SVG預覽（fromHistory=true表示來自歷史記錄，不要重複保存）
+        updateSvgPreview(item.svgCode, true);
+        
+        // 標記活動項目
+        const historyElements = document.querySelectorAll('.history-item');
+        historyElements.forEach(el => {
+            if (el.dataset.id === item.id) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        });
+    }
+    
+    function deleteHistoryItem(id) {
+        // 過濾掉要刪除的項目
+        historyItems = historyItems.filter(item => item.id !== id);
+        
+        // 保存到localStorage
+        saveHistoryToStorage();
+        
+        // 更新UI
+        renderHistoryItems();
+    }
+    
+    function formatDate(date) {
+        return date instanceof Date ? 
+            `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}` : 
+            '未知日期';
+    }
+    
+    function saveHistoryToStorage() {
+        try {
+            // 對每個歷史項目處理日期（轉為字符串）
+            const historyToSave = historyItems.map(item => ({
+                id: item.id,
+                timestamp: item.timestamp.toISOString(),
+                svgCode: item.svgCode,
+                thumbnail: item.thumbnail,
+                description: item.description,
+                _hash: item._hash
+            }));
+            
+            localStorage.setItem('sketch2chart_history', JSON.stringify(historyToSave));
+        } catch (error) {
+            console.error('保存歷史記錄失敗:', error);
+        }
+    }
+    
+    function loadHistoryItems() {
+        try {
+            const saved = localStorage.getItem('sketch2chart_history');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                
+                // 簡單雜湊函數
+                const simpleHash = (str) => {
+                    return str.split('').reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) | 0, 0);
+                };
+                
+                // 轉換日期字符串回Date對象
+                historyItems = parsed.map(item => ({
+                    ...item,
+                    timestamp: new Date(item.timestamp),
+                    // 如果沒有雜湊值，添加一個
+                    _hash: item._hash || simpleHash(item.svgCode)
+                }));
+                
+                renderHistoryItems();
+            }
+        } catch (error) {
+            console.error('加載歷史記錄失敗:', error);
+            historyItems = [];
+        }
+    }
+    
+    // 保存進階設定
+    function saveAdvancedSettings() {
+        // 更新設定
+        apiSettings.apiUrl = apiUrl.value;
+        apiSettings.model = apiModel.value === 'custom' ? customModel.value : apiModel.value;
+        apiSettings.customModel = customModel.value;
+        apiSettings.temperature = parseFloat(temperature.value);
+        apiSettings.maxTokens = parseInt(maxTokens.value);
+        apiSettings.streamResponse = streamResponse.checked;
+        apiSettings.saveSettings = saveSettings.checked;
+        
+        // 保存設定到本地存儲
+        if (saveSettings.checked) {
+            localStorage.setItem('sketch2chart_api_settings', JSON.stringify(apiSettings));
+        }
+    }
+    
+    // 重設設定為預設值
+    function resetToDefaults() {
+        // 重設為預設值
+        apiSettings = {...defaultApiSettings};
+        
+        // 更新UI
+        updateSettingsUI();
+        
+        // 顯示提示
+        showToast('已重設為預設值');
+    }
+    
+    // 初始化頁面
+    async function init() {
+        // 初始化CodeMirror編輯器
+        initCodeMirror();
+        
+        // 載入保存的設定
+        loadSavedSettings();
+        
+        // 載入歷史記錄
+        loadHistoryItems();
+        
+        // 移除可能已經存在的事件監聽器，防止重複註冊
+        convertBtn.removeEventListener('click', handleConvertButtonClick);
+        
+        // 添加"轉換"按鈕事件監聽器
+        convertBtn.addEventListener('click', handleConvertButtonClick);
+        
+        // 添加"複製代碼"按鈕事件監聽器
+        copyCodeBtn.addEventListener('click', function() {
+            const code = codeEditor.getValue();
+            navigator.clipboard.writeText(code)
+                .then(() => showToast('代碼已複製到剪貼板'))
+                .catch(err => console.error('複製失敗:', err));
+        });
+        
+        // 添加"下載SVG"按鈕事件監聽器
+        downloadSvgBtn.addEventListener('click', function() {
+            const svgCode = codeEditor.getValue();
+            if (!svgCode) return;
+            
+            const blob = new Blob([svgCode], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sketch2chart_${new Date().toISOString().slice(0,10)}.svg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+        
+        // 添加API金鑰事件監聽器
+        apiKey.addEventListener('change', function() {
+            localStorage.setItem('sketch2chart_api_key', this.value);
+        });
+        
+        // 載入保存的API金鑰
+        const savedKey = localStorage.getItem('sketch2chart_api_key');
+        if (savedKey) {
+            apiKey.value = savedKey;
+        }
+        
+        // 進階設定按鈕和模態視窗事件
+        advancedSettingsBtn.addEventListener('click', function() {
+            advancedSettingsModal.classList.remove('hidden');
+        });
+        
+        closeModalBtn.addEventListener('click', function() {
+            advancedSettingsModal.classList.add('hidden');
+        });
+        
+        saveSettingsBtn.addEventListener('click', function() {
+            saveAdvancedSettings();
+            advancedSettingsModal.classList.add('hidden');
+            showToast('設定已儲存');
+        });
+        
+        resetDefaultsBtn.addEventListener('click', function() {
+            resetToDefaults();
+        });
+        
+        // 溫度滑桿更新顯示值
+        temperature.addEventListener('input', function() {
+            temperatureValue.textContent = this.value;
+        });
+        
+        // 自定義模型選擇邏輯
+        apiModel.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customModelContainer.classList.remove('hidden');
+            } else {
+                customModelContainer.classList.add('hidden');
+            }
+        });
+        
+        // 點擊模態視窗外部關閉
+        advancedSettingsModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+    }
+    
+    // 執行初始化函數
+    init();
 }); 

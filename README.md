@@ -13,15 +13,18 @@ Sketch2Chart is a user-friendly tool that converts hand-drawn sketches into stru
 - ✏️ **Code Editing**: Direct code editing with syntax highlighting
 - 💾 **Export Options**: Download generated SVG or other format files
 - ⚙️ **Advanced Settings**: Customize API endpoint, model selection, and other parameters
+- 📋 **History Feature**: Save previous conversion results for quick recovery and comparison
 
 ## Usage
 
 1. Download the source code
 2. Open `public/index.html` directly in your browser
-3. Choose to draw on canvas or upload an existing image
-4. Click "Convert" to process
-5. Edit generated code or add text descriptions as needed
-6. Download or copy the final result
+3. Click the gear icon in the top-right corner for advanced settings (optional)
+4. Choose to draw on canvas or upload an existing image
+5. Click "Convert" to process
+6. Edit generated code or add text descriptions as needed
+7. Download or copy the final result
+8. Use the sidebar to view and restore previously converted charts (history)
 
 ## Technical Stack
 
@@ -29,6 +32,7 @@ Sketch2Chart is a user-friendly tool that converts hand-drawn sketches into stru
 - Drawing: Canvas API
 - File Handling: FileReader API
 - Code Editing: CodeMirror 5.65.13
+- Visual Interaction: SVG.js, SVG PanZoom
 - AI Integration: API connection to multimodal language models
 
 ## Development Requirements
@@ -39,6 +43,8 @@ Sketch2Chart is a user-friendly tool that converts hand-drawn sketches into stru
 ## External Packages
 
 - [CodeMirror](https://codemirror.net/) - For code editing and syntax highlighting
+- [SVG.js](https://svgjs.dev/) - For SVG handling and interaction
+- [SVG PanZoom](https://github.com/ariutta/svg-pan-zoom) - Provides SVG zoom and pan functionality
 
 ## Project Structure
 
@@ -65,6 +71,7 @@ Sketch2Chart is a user-friendly tool that converts hand-drawn sketches into stru
 - Python deployment option
 - Support for more output formats
 - Model performance and conversion accuracy optimization
+- Enhanced history features with categories and tags
 
 ## License
 

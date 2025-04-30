@@ -2,14 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-## [2025-02-19] - Documentation Update
+## [2025-04-30] - History Feature Implementation
+
+### FEAT
+- Added conversion history sidebar with thumbnails
+- Implemented local storage for history persistence
+- Added ability to reload previous SVG from history
+- Added delete functionality for history items
+- Implemented hash-based duplicate prevention
+- Added responsive layout for history sidebar on mobile devices
+
+### STYLE
+- Added compact history preview thumbnails
+- Implemented hover effects and active state for history items
+- Added timestamp display for history items
+
+## [2025-04-30] - Documentation Update
 
 ### DOCS
 - Add English README
 - Added advanced settings configuration steps in usage guide
 - Reorganized usage steps for better clarity
 
-## [2025-02-18] - SVG Interaction Enhancement
+## [2025-04-30] - SVG Interaction Enhancement
 
 ### FEAT
 - Added SVG preview area zoom and pan functionality
@@ -23,7 +38,7 @@ All notable changes to this project will be documented in this file.
 - Added circular control buttons and hover effect
 - Optimized error message display
 
-## [2025-02-15] - API Enhancement
+## [2025-04-29] - API Enhancement
 
 ### FEAT
 - Added advanced API settings modal with customizable options
@@ -42,7 +57,7 @@ All notable changes to this project will be documented in this file.
 - Added modal dialog for advanced settings
 - Improved form layout and controls for settings management
 
-## [2025-01-25] - Initial Release
+## [2025-04-29] - Initial Release
 
 ### FEAT
 - Implemented basic canvas drawing functionality with multiple tools (pencil, line, rectangle, circle, text, eraser).

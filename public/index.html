@@ -101,33 +101,46 @@
             <section class="output-section">
                 <h3 class="section-title">轉換結果</h3>
 
-                <!-- 預覽區域 -->
-                <div class="preview-container">
-                    <h4>預覽</h4>
-                    <div id="svg-preview">
-                        <div class="placeholder">轉換結果將在此顯示</div>
-                        <!-- SVG.js 容器將在此創建 -->
-                    </div>
-                    <!-- 縮放控制按鈕 -->
-                    <div class="zoom-controls">
-                        <button class="zoom-btn" id="zoom-in">+</button>
-                        <button class="zoom-btn" id="zoom-out">-</button>
-                        <button class="zoom-btn" id="zoom-reset">⟲</button>
+                <div class="output-content-wrapper">
+                    <!-- 主要輸出內容 -->
+                    <div class="main-output">
+                        <!-- 預覽區域 -->
+                        <div class="preview-container">
+                            <h4>預覽</h4>
+                            <div id="svg-preview">
+                                <div class="placeholder">轉換結果將在此顯示</div>
+                                <!-- SVG.js 容器將在此創建 -->
+                            </div>
+                            <!-- 縮放控制按鈕 -->
+                            <div class="zoom-controls">
+                                <button class="zoom-btn" id="zoom-in">+</button>
+                                <button class="zoom-btn" id="zoom-out">-</button>
+                                <button class="zoom-btn" id="zoom-reset">⟲</button>
+                            </div>
+                        </div>
+
+                        <!-- 代碼編輯區域 -->
+                        <div class="code-container">
+                            <h4>SVG 程式碼</h4>
+                            <div class="code-editor-wrapper">
+                                <!-- CodeMirror 編輯器將替換此元素 -->
+                                <textarea id="code-editor" spellcheck="false"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="output-actions">
+                            <button id="copy-code-btn" class="action-btn" disabled>複製代碼</button>
+                            <button id="download-svg-btn" class="primary-btn" disabled>下載SVG</button>
+                        </div>
                     </div>
                 </div>
-
-                <!-- 代碼編輯區域 -->
-                <div class="code-container">
-                    <h4>SVG 程式碼</h4>
-                    <div class="code-editor-wrapper">
-                        <!-- CodeMirror 編輯器將替換此元素 -->
-                        <textarea id="code-editor" spellcheck="false"></textarea>
-                    </div>
-                </div>
-
-                <div class="output-actions">
-                    <button id="copy-code-btn" class="action-btn" disabled>複製代碼</button>
-                    <button id="download-svg-btn" class="primary-btn" disabled>下載SVG</button>
+            </section>
+            
+            <!-- 歷史記錄側邊欄（外側） -->
+            <section class="history-sidebar">
+                <h4>歷史記錄</h4>
+                <div id="history-previews" class="history-previews">
+                    <div class="placeholder">尚無歷史記錄</div>
                 </div>
             </section>
         </div>

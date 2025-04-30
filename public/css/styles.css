@@ -51,9 +51,9 @@ main {
 
 .container {
     display: flex;
-    max-width: 1600px;
+    max-width: 1800px;
     margin: 0 auto;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 /* 輸入區域 */
@@ -258,6 +258,42 @@ main {
     gap: 1.5rem;
 }
 
+/* 輸出內容包裝器 */
+.output-content-wrapper {
+    display: flex;
+    flex: 1;
+    min-height: 600px;
+}
+
+/* 主要輸出內容 */
+.main-output {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* 歷史記錄側邊欄 */
+.history-sidebar {
+    width: 180px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.history-sidebar h4 {
+    margin-bottom: 1rem;
+    font-weight: 500;
+    text-align: center;
+    color: var(--dark-color);
+    border-bottom: 1px solid var(--gray-color);
+    padding-bottom: 0.5rem;
+}
+
 .section-title {
     font-size: 1.5rem;
     color: var(--dark-color);
@@ -371,7 +407,8 @@ svg.svg-pan-zoom_viewport {
 /* CodeMirror 自定義樣式 */
 .CodeMirror {
     width: 100%;
-    height: 300px !important;
+    height: 100%;
+    max-height: 500px;
     border-radius: var(--border-radius);
     font-family: 'Consolas', 'Courier New', monospace;
     font-size: 14px;
@@ -559,12 +596,18 @@ footer a:hover {
 }
 
 /* 響應式設計 */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 100%;
+    }
+}
+
 @media (max-width: 992px) {
     .container {
         flex-direction: column;
     }
     
-    .input-section, .output-section {
+    .input-section, .output-section, .history-sidebar {
         width: 100%;
     }
     
@@ -580,6 +623,30 @@ footer a:hover {
     .api-container {
         flex-direction: column;
         align-items: stretch;
+    }
+    
+    .output-content-wrapper {
+        flex-direction: column;
+    }
+    
+    .history-sidebar {
+        order: 3; /* 在移動版視圖中放在最下方 */
+    }
+    
+    .history-previews {
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: auto;
+        padding-bottom: 0.5rem;
+        max-height: 120px;
+    }
+    
+    .history-item {
+        min-width: 120px;
+        max-width: 120px;
+        height: 80px;
+        min-height: 80px;
     }
 }
 
@@ -642,4 +709,92 @@ footer a:hover {
 .toast.show {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* 歷史預覽區域 */
+.history-container {
+    margin-bottom: 1.5rem;
+}
+
+.history-container h4 {
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.history-previews {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    height: 100%;
+    padding-right: 0.5rem;
+}
+
+.history-item {
+    position: relative;
+    border: 2px solid var(--gray-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 100px;
+    min-height: 100px;
+}
+
+.history-item:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.history-item.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.history-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.history-item .history-date {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 4px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.history-item .delete-history {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.history-item:hover .delete-history {
+    opacity: 1;
+}
+
+.history-item .delete-history:hover {
+    background-color: var(--danger-color);
 } 
