@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2025-04-30] - Internationalization Support
+
+### FEAT
+- Implemented complete i18n support with English and Traditional Chinese
+- Added language preference persistence using localStorage
+- Created language selector UI with smooth switching
+- Implemented dynamic content translation system
+
+### STYLE
+- Added language selector styling with hover effects
+- Implemented responsive design for language selector
+- Added active state indication for selected language
+
+### REFACTOR
+- Updated all static text content to use i18n keys
+- Improved error message handling with translations
+- Enhanced toast notification system with i18n support
+
 ## [2025-04-30] - History Feature Implementation
 
 ### FEAT

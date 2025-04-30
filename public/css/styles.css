@@ -671,6 +671,10 @@ footer a:hover {
     .modal-content {
         width: 95%;
     }
+    
+    .language-selector {
+        flex-wrap: wrap;
+    }
 }
 
 /* 預覽區域內的樣式 */
@@ -797,4 +801,38 @@ footer a:hover {
 
 .history-item .delete-history:hover {
     background-color: var(--danger-color);
+}
+
+/* 語言選擇器 */
+.language-selector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1rem;
+    gap: 0.5rem;
+}
+
+.language-selector span {
+    font-size: 0.9rem;
+}
+
+.lang-select {
+    padding: 0.3rem 0.6rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--border-radius);
+    color: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.lang-select:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.lang-select.active {
+    background-color: white;
+    color: var(--primary-color);
+    font-weight: 500;
 } 

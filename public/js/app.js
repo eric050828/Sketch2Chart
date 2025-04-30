@@ -469,12 +469,23 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 處理API錯誤
     function handleApiError(error) {
-        console.error('API錯誤:', error);
+        console.error('API Error:', error);
         
-        // 更新UI
-        svgPreview.innerHTML = `<div class="placeholder error">發生錯誤：${error.message}</div>`;
+        let errorMessage;
+        if (typeof error === 'object' && error.message) {
+            errorMessage = error.message;
+        } else {
+            errorMessage = error.toString();
+        }
+        
+        svgPreview.innerHTML = `<div class="placeholder error">${window.i18n.__('error-message')}: ${errorMessage}</div>`;
+        
+        // 顯示錯誤提示吐司訊息
+        showToast(`${window.i18n.__('error-occurred')}: ${errorMessage}`);
+        
+        // 啟用轉換按鈕
         convertBtn.disabled = false;
-        convertBtn.innerHTML = '轉換為SVG';
+        convertBtn.innerHTML = window.i18n.__('convert-btn');
     }
     
     // 複製代碼按鈕
@@ -592,35 +603,63 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 顯示提示信息
     function showToast(message) {
-        // 如果已有提示，先移除
-        const existingToast = document.querySelector('.toast');
-        if (existingToast) {
-            document.body.removeChild(existingToast);
+        // 檢查是否已有吐司訊息
+        let toast = document.querySelector('.toast');
+        
+        if (toast) {
+            // 如果已有吐司，則更新內容並重設超時
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            // 清除現有的超時
+            if (toast.timeoutId) {
+                clearTimeout(toast.timeoutId);
+            }
+        } else {
+            // 創建新的吐司元素
+            toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 延遲一點點，讓CSS過渡效果正常工作
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
         }
         
-        // 創建提示元素
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = message;
-        
-        // 添加到頁面
-        document.body.appendChild(toast);
-        
-        // 顯示動畫
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 10);
-        
-        // 自動隱藏
-        setTimeout(() => {
+        // 設置超時以自動關閉吐司
+        toast.timeoutId = setTimeout(() => {
             toast.classList.remove('show');
-            
-            // 隱藏後移除
             setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 300);
+                // 超時後移除吐司元素
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300); // 等待過渡效果完成
         }, 3000);
     }
+    
+    // 監聽語言變更事件，更新模型選項顯示
+    document.addEventListener('languageChanged', function(event) {
+        // 更新自定義選項文字
+        const customOption = apiModel.querySelector('option[value="custom"]');
+        if (customOption) {
+            customOption.textContent = window.i18n.__('custom-model');
+        }
+        
+        // 更新錯誤訊息顯示
+        const placeholderError = document.querySelector('.placeholder.error');
+        if (placeholderError) {
+            const errorMessage = placeholderError.textContent.split(': ')[1] || '';
+            placeholderError.textContent = `${window.i18n.__('error-message')}: ${errorMessage}`;
+        }
+        
+        // 更新預覽圖片的alt屬性
+        if (imagePreview) {
+            imagePreview.alt = window.i18n.__('preview-title');
+        }
+    });
     
     // 歷史記錄功能
     async function saveToHistory(svgCode) {
@@ -897,81 +936,79 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 初始化頁面
     async function init() {
-        // 初始化CodeMirror編輯器
-        initCodeMirror();
-        
-        // 載入保存的設定
+        // 加載保存的設定
         loadSavedSettings();
         
-        // 載入歷史記錄
-        loadHistoryItems();
+        // 初始化CodeMirror
+        initCodeMirror();
         
-        // 移除可能已經存在的事件監聽器，防止重複註冊
-        convertBtn.removeEventListener('click', handleConvertButtonClick);
+        // 載入歷史項目
+        await loadHistoryItems();
+        renderHistoryItems();
         
-        // 添加"轉換"按鈕事件監聽器
+        // 為轉換按鈕添加事件監聽器
         convertBtn.addEventListener('click', handleConvertButtonClick);
         
-        // 添加"複製代碼"按鈕事件監聽器
-        copyCodeBtn.addEventListener('click', function() {
-            const code = codeEditor.getValue();
-            navigator.clipboard.writeText(code)
-                .then(() => showToast('代碼已複製到剪貼板'))
-                .catch(err => console.error('複製失敗:', err));
+        // 為複製代碼按鈕添加事件監聽器
+        copyCodeBtn.addEventListener('click', () => {
+            const svgCode = codeEditor.getValue();
+            navigator.clipboard.writeText(svgCode)
+                .then(() => {
+                    showToast(window.i18n.__('code-copied'));
+                })
+                .catch(err => {
+                    console.error('複製失敗:', err);
+                    showToast(window.i18n.__('copy-failed'));
+                });
         });
         
-        // 添加"下載SVG"按鈕事件監聽器
-        downloadSvgBtn.addEventListener('click', function() {
+        // 為下載SVG按鈕添加事件監聽器
+        downloadSvgBtn.addEventListener('click', () => {
             const svgCode = codeEditor.getValue();
-            if (!svgCode) return;
-            
-            const blob = new Blob([svgCode], {type: 'image/svg+xml'});
+            const blob = new Blob([svgCode], { type: 'image/svg+xml' });
             const url = URL.createObjectURL(blob);
+            
             const a = document.createElement('a');
             a.href = url;
-            a.download = `sketch2chart_${new Date().toISOString().slice(0,10)}.svg`;
+            a.download = 'sketch2chart.svg';
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            
+            // 清理
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
         });
         
-        // 添加API金鑰事件監聽器
-        apiKey.addEventListener('change', function() {
-            localStorage.setItem('sketch2chart_api_key', this.value);
-        });
-        
-        // 載入保存的API金鑰
-        const savedKey = localStorage.getItem('sketch2chart_api_key');
-        if (savedKey) {
-            apiKey.value = savedKey;
-        }
-        
-        // 進階設定按鈕和模態視窗事件
-        advancedSettingsBtn.addEventListener('click', function() {
+        // 進階設定處理
+        advancedSettingsBtn.addEventListener('click', () => {
             advancedSettingsModal.classList.remove('hidden');
+            updateSettingsUI();
         });
         
-        closeModalBtn.addEventListener('click', function() {
+        closeModalBtn.addEventListener('click', () => {
             advancedSettingsModal.classList.add('hidden');
         });
         
-        saveSettingsBtn.addEventListener('click', function() {
+        // 點擊模態視窗外側關閉
+        advancedSettingsModal.addEventListener('click', (e) => {
+            if (e.target === advancedSettingsModal) {
+                advancedSettingsModal.classList.add('hidden');
+            }
+        });
+        
+        // 保存設定按鈕
+        saveSettingsBtn.addEventListener('click', () => {
             saveAdvancedSettings();
             advancedSettingsModal.classList.add('hidden');
-            showToast('設定已儲存');
+            showToast(window.i18n.__('settings-saved'));
         });
         
-        resetDefaultsBtn.addEventListener('click', function() {
-            resetToDefaults();
-        });
+        // 重設為預設值
+        resetDefaultsBtn.addEventListener('click', resetToDefaults);
         
-        // 溫度滑桿更新顯示值
-        temperature.addEventListener('input', function() {
-            temperatureValue.textContent = this.value;
-        });
-        
-        // 自定義模型選擇邏輯
+        // 切換自定義模型輸入欄位
         apiModel.addEventListener('change', function() {
             if (this.value === 'custom') {
                 customModelContainer.classList.remove('hidden');
@@ -980,14 +1017,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // 點擊模態視窗外部關閉
-        advancedSettingsModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
-            }
+        // 溫度滑桿更新顯示值
+        temperature.addEventListener('input', function() {
+            temperatureValue.textContent = this.value;
         });
+        
+        // 初始化完成
+        console.log('應用程式初始化完成');
     }
     
-    // 執行初始化函數
+    // 初始化應用程式
     init();
 }); 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sketch2Chart - 手繪轉換工具</title>
+    <title>Sketch2Chart - Hand-drawn Sketch Converter</title>
     <!-- 基本樣式 -->
     <link rel="stylesheet" href="css/styles.css">
     
@@ -34,11 +34,14 @@
     <!-- SVG.js 庫 - 用於SVG縮放與平移 -->
     <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.2.0/dist/svg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.panzoom.js@2.1.2/dist/svg.panzoom.min.js"></script>
+    
+    <!-- i18n 多語系支援 -->
+    <script src="js/i18n.js"></script>
 </head>
 <body>
     <header>
-        <h1>Sketch2Chart</h1>
-        <p>將手繪圖轉換為結構化代碼</p>
+        <h1 data-i18n="header-title">Sketch2Chart</h1>
+        <p data-i18n="header-subtitle">Convert hand-drawn sketches to structured code</p>
     </header>
 
     <main>
@@ -46,19 +49,19 @@
             <!-- 左側輸入區域 -->
             <section class="input-section">
                 <div class="tabs">
-                    <button class="tab-btn active" data-target="canvas-container">畫布</button>
-                    <button class="tab-btn" data-target="upload-container">上傳圖片</button>
+                    <button class="tab-btn active" data-target="canvas-container" data-i18n="tab-canvas">Canvas</button>
+                    <button class="tab-btn" data-target="upload-container" data-i18n="tab-upload">Upload Image</button>
                 </div>
 
                 <div class="tab-content" id="canvas-container">
                     <div class="canvas-tools">
-                        <button id="pen-tool" class="tool-btn active">✏️ 鉛筆</button>
-                        <button id="line-tool" class="tool-btn">📏 直線</button>
-                        <button id="rect-tool" class="tool-btn">⬜ 矩形</button>
-                        <button id="circle-tool" class="tool-btn">⭕ 圓形</button>
-                        <button id="text-tool" class="tool-btn">🔤 文字</button>
-                        <button id="eraser-tool" class="tool-btn">🧽 橡皮擦</button>
-                        <button id="clear-canvas" class="action-btn">🗑️ 清除</button>
+                        <button id="pen-tool" class="tool-btn active" data-i18n="tool-pen">✏️ Pencil</button>
+                        <button id="line-tool" class="tool-btn" data-i18n="tool-line">📏 Line</button>
+                        <button id="rect-tool" class="tool-btn" data-i18n="tool-rect">⬜ Rectangle</button>
+                        <button id="circle-tool" class="tool-btn" data-i18n="tool-circle">⭕ Circle</button>
+                        <button id="text-tool" class="tool-btn" data-i18n="tool-text">🔤 Text</button>
+                        <button id="eraser-tool" class="tool-btn" data-i18n="tool-eraser">🧽 Eraser</button>
+                        <button id="clear-canvas" class="action-btn" data-i18n="tool-clear">🗑️ Clear</button>
                     </div>
                     <div class="canvas-wrapper">
                         <canvas id="drawing-canvas"></canvas>
@@ -68,47 +71,47 @@
                 <div class="tab-content hidden" id="upload-container">
                     <div class="upload-area">
                         <div class="drop-zone">
-                            <span class="drop-zone-prompt">拖放圖片到此處或點擊上傳</span>
+                            <span class="drop-zone-prompt" data-i18n="drop-zone-prompt">Drop image here or click to upload</span>
                             <input type="file" id="image-upload" class="drop-zone-input" accept="image/*">
                         </div>
                         <div id="preview-container" class="hidden">
-                            <h3>預覽圖片</h3>
-                            <img id="image-preview" src="" alt="預覽圖片">
-                            <button id="clear-image" class="action-btn">移除圖片</button>
+                            <h3 data-i18n="preview-title">Preview Image</h3>
+                            <img id="image-preview" src="" alt="Preview Image">
+                            <button id="clear-image" class="action-btn" data-i18n="remove-image">Remove Image</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="text-description">
-                    <h3>文字描述（可選）</h3>
-                    <textarea id="text-input" placeholder="請輸入額外的文字描述或修改指示..."></textarea>
+                    <h3 data-i18n="text-description-title">Text Description (Optional)</h3>
+                    <textarea id="text-input" placeholder="Enter additional text description or modification instructions..." data-i18n="text-description"></textarea>
                 </div>
 
                 <div class="api-container">
                     <div class="api-key-container">
-                        <label for="api-key">API金鑰</label>
-                        <input type="password" id="api-key" placeholder="請輸入您的API金鑰">
+                        <label for="api-key" data-i18n="api-key">API Key</label>
+                        <input type="password" id="api-key" placeholder="Enter your API key" data-i18n="api-key">
                     </div>
-                    <button id="advanced-settings-btn" class="action-btn">⚙️ 進階設定</button>
+                    <button id="advanced-settings-btn" class="action-btn" data-i18n="advanced-settings">⚙️ Advanced Settings</button>
                 </div>
 
                 <div class="actions">
-                    <button id="convert-btn" class="primary-btn">轉換為SVG</button>
+                    <button id="convert-btn" class="primary-btn" data-i18n="convert-btn">Convert to SVG</button>
                 </div>
             </section>
 
             <!-- 右側輸出區域 -->
             <section class="output-section">
-                <h3 class="section-title">轉換結果</h3>
+                <h3 class="section-title" data-i18n="output-title">Conversion Result</h3>
 
                 <div class="output-content-wrapper">
                     <!-- 主要輸出內容 -->
                     <div class="main-output">
                         <!-- 預覽區域 -->
                         <div class="preview-container">
-                            <h4>預覽</h4>
+                            <h4 data-i18n="preview-section">Preview</h4>
                             <div id="svg-preview">
-                                <div class="placeholder">轉換結果將在此顯示</div>
+                                <div class="placeholder" data-i18n="placeholder-text">Conversion result will be displayed here</div>
                                 <!-- SVG.js 容器將在此創建 -->
                             </div>
                             <!-- 縮放控制按鈕 -->
@@ -121,7 +124,7 @@
 
                         <!-- 代碼編輯區域 -->
                         <div class="code-container">
-                            <h4>SVG 程式碼</h4>
+                            <h4 data-i18n="code-section">SVG Code</h4>
                             <div class="code-editor-wrapper">
                                 <!-- CodeMirror 編輯器將替換此元素 -->
                                 <textarea id="code-editor" spellcheck="false"></textarea>
@@ -129,8 +132,8 @@
                         </div>
 
                         <div class="output-actions">
-                            <button id="copy-code-btn" class="action-btn" disabled>複製代碼</button>
-                            <button id="download-svg-btn" class="primary-btn" disabled>下載SVG</button>
+                            <button id="copy-code-btn" class="action-btn" disabled data-i18n="copy-code">Copy Code</button>
+                            <button id="download-svg-btn" class="primary-btn" disabled data-i18n="download-svg">Download SVG</button>
                         </div>
                     </div>
                 </div>
@@ -138,9 +141,9 @@
             
             <!-- 歷史記錄側邊欄（外側） -->
             <section class="history-sidebar">
-                <h4>歷史記錄</h4>
+                <h4 data-i18n="history-title">History</h4>
                 <div id="history-previews" class="history-previews">
-                    <div class="placeholder">尚無歷史記錄</div>
+                    <div class="placeholder" data-i18n="history-empty">No history records</div>
                 </div>
             </section>
         </div>
@@ -150,18 +153,18 @@
     <div id="advanced-settings-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>進階 API 設定</h2>
+                <h2 data-i18n="modal-title">Advanced API Settings</h2>
                 <button id="close-modal-btn" class="close-btn">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="api-url">API 端點 URL</label>
-                    <input type="text" id="api-url" placeholder="例如: https://api.openai.com/v1/chat/completions">
-                    <small>輸入 OpenAI 相容的 API 端點。自架 LLM 或其他兼容服務可在此設定。</small>
+                    <label for="api-url" data-i18n="api-url">API Endpoint URL</label>
+                    <input type="text" id="api-url" placeholder="e.g., https://api.openai.com/v1/chat/completions" data-i18n="api-url">
+                    <small data-i18n="api-url-help">Enter an OpenAI-compatible API endpoint. Self-hosted LLMs or other compatible services can be configured here.</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="api-model">模型選擇</label>
+                    <label for="api-model" data-i18n="model-select">Model Selection</label>
                     <select id="api-model">
                         <option value="gpt-4-vision-preview">GPT-4 Vision</option>
                         <option value="gpt-4o">GPT-4o</option>
@@ -170,51 +173,51 @@
                         <option value="claude-3-opus-20240229">Claude 3 Opus</option>
                         <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
                         <option value="llama-3-70b-vision">Llama 3 70B Vision</option>
-                        <option value="custom">自定義...</option>
+                        <option value="custom" data-i18n="custom-model">Custom...</option>
                     </select>
                 </div>
                 
                 <div id="custom-model-container" class="form-group hidden">
-                    <label for="custom-model">自定義模型名稱</label>
-                    <input type="text" id="custom-model" placeholder="輸入自定義模型名稱">
+                    <label for="custom-model" data-i18n="custom-model-name">Custom Model Name</label>
+                    <input type="text" id="custom-model" placeholder="Enter custom model name" data-i18n="custom-model-name">
                 </div>
                 
                 <div class="form-group">
-                    <label for="temperature">溫度 (Temperature)</label>
+                    <label for="temperature" data-i18n="temperature">Temperature</label>
                     <div class="range-container">
                         <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7">
                         <span id="temperature-value">0.7</span>
                     </div>
-                    <small>較低的值產生更確定性結果，較高的值產生更多樣化結果</small>
+                    <small data-i18n="temperature-help">Lower values produce more deterministic results, higher values produce more diverse results</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="max-tokens">最大生成令牌數</label>
+                    <label for="max-tokens" data-i18n="max-tokens">Maximum Generated Tokens</label>
                     <input type="number" id="max-tokens" min="1" max="16000" value="4000">
-                    <small>限制API回應的最大長度</small>
+                    <small data-i18n="max-tokens-help">Limit the maximum length of the API response</small>
                 </div>
                 
                 <div class="form-group">
-                    <label>進階選項</label>
+                    <label data-i18n="advanced-options">Advanced Options</label>
                     <div class="checkbox-group">
                         <input type="checkbox" id="stream-response" checked>
-                        <label for="stream-response">啟用串流回應（如果 API 支援）</label>
+                        <label for="stream-response" data-i18n="stream-response">Enable streaming response (if API supports it)</label>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="save-settings" checked>
-                        <label for="save-settings">保存這些設定</label>
+                        <label for="save-settings" data-i18n="save-settings">Save these settings</label>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="reset-defaults-btn" class="action-btn">重設為預設值</button>
-                <button id="save-settings-btn" class="primary-btn">保存設定</button>
+                <button id="reset-defaults-btn" class="action-btn" data-i18n="reset-defaults">Reset to Defaults</button>
+                <button id="save-settings-btn" class="primary-btn" data-i18n="save-btn">Save Settings</button>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>Sketch2Chart &copy; 2025 | <a href="https://github.com/eric050828/sketch2chart" target="_blank">GitHub</a></p>
+        <p><span data-i18n="footer-text">Sketch2Chart</span> &copy; 2025 | <a href="https://github.com/eric050828/sketch2chart" target="_blank">GitHub</a></p>
     </footer>
 
     <script src="js/app.js"></script>
